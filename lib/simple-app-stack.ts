@@ -4,6 +4,8 @@ import * as cdk from '@aws-cdk/core';
 import { Runtime } from '@aws-cdk/aws-lambda';
 import * as path from 'path';
 import {BucketDeployment, Source} from '@aws-cdk/aws-s3-deployment'
+import { PolicyStatement } from '@aws-cdk/aws-iam';
+import { getPhotos } from '../api/get-photos';
 
 export class SimpleAppStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -32,6 +34,18 @@ export class SimpleAppStack extends cdk.Stack {
         PHOTO_BUCKET_NAME: bucket.bucketName,
       },
     });
+
+    // generate IAM rules
+    const bucketContainerPermissions = new PolicyStatement();
+    bucketContainerPermissions.addResources(bucket.bucketArn);
+    bucketContainerPermissions.addActions('s3:ListBucket');
+
+    const bucketPermissions = new PolicyStatement();
+    bucketPermissions.addResources(`${bucket.bucketArn}/*`);
+    bucketPermissions.addActions('s3:GetObject', 's3:PutObject');
+
+    getPhotosLambda.addToRolePolicy(bucketPermissions);
+    getPhotosLambda.addToRolePolicy(bucketContainerPermissions);
 
     new cdk.CfnOutput(this, 'MySimpleAppBucketNameExport', {
       value: bucket.bucketName,
