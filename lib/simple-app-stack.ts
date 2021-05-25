@@ -25,7 +25,19 @@ export class SimpleAppStack extends cdk.Stack {
         Source.asset(path.join(__dirname, '..', 'photos'))
       ],
       destinationBucket: bucket
-    })
+    });
+
+    // create bucket to host our react site
+    const websiteBucket = new Bucket(this, 'MySimpleAppWebsiteBucket', {
+      websiteIndexDocument: 'index.html',
+      publicReadAccess: true
+    });
+    
+    new BucketDeployment(this, 'MySimpleAppWebsiteDeploy', {
+      sources: [Source.asset(path.join(__dirname, '..', 'frontend', 'build'))],
+      destinationBucket: websiteBucket
+    }) 
+
 
     // create lambda
     const getPhotosLambda = new lambda.NodejsFunction(this, 'get-photos', {
@@ -82,5 +94,10 @@ export class SimpleAppStack extends cdk.Stack {
       value: httpApi.url!,
       exportName: 'MySimpleAppApiEndPoint'
     });
+
+    new cdk.CfnOutput(this, 'MySimpleAppWebsiteBucketNameExport',{
+      value: websiteBucket.bucketName,
+      exportName: 'MySimpleAppWebsiteBucketName'
+    })
   }
 }
