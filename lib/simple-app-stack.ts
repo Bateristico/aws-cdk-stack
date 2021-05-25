@@ -8,6 +8,7 @@ import { PolicyStatement } from '@aws-cdk/aws-iam';
 import { getPhotos } from '../api/get-photos';
 import { HttpApi, CorsHttpMethod, HttpMethod } from '@aws-cdk/aws-apigatewayv2';
 import { LambdaProxyIntegration } from '@aws-cdk/aws-apigatewayv2-integrations';
+import {CloudFrontWebDistribution} from '@aws-cdk/aws-cloudfront';
 
 export class SimpleAppStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -38,6 +39,18 @@ export class SimpleAppStack extends cdk.Stack {
       destinationBucket: websiteBucket
     }) 
 
+
+    // creating our cloudfront
+    const cloudFront = new CloudFrontWebDistribution(this, 'MySimpleAppDistribution', {
+      originConfigs: [
+        {
+          s3OriginSource: {
+            s3BucketSource: websiteBucket,
+          },
+          behaviors: [{ isDefaultBehavior: true}]
+        }
+      ]
+    })
 
     // create lambda
     const getPhotosLambda = new lambda.NodejsFunction(this, 'get-photos', {
@@ -98,6 +111,11 @@ export class SimpleAppStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'MySimpleAppWebsiteBucketNameExport',{
       value: websiteBucket.bucketName,
       exportName: 'MySimpleAppWebsiteBucketName'
+    })
+
+    new cdk.CfnOutput(this, 'MySimpleAppWebsiteUrl', {
+      value: cloudFront.distributionDomainName,
+      exportName: 'MySimpleAppUrl'
     })
   }
 }
