@@ -1,24 +1,26 @@
-import React from 'react';
-import logo from './logo.svg';
+import {useEffect, useState} from 'react';
+import axios from 'axios';
 import './App.css';
 
 function App() {
+
+  const [allPhotos, setAllPhotos] = useState([]);
+
+  async function fetchPhotos(){
+    const {data} = await axios.get(`${baseUri}getAllPhotos`);
+    setAllPhotos(data);
+  }
+
+  useEffect(()=> {
+    fetchPhotos();
+  }, [])
+
+  const baseUri: string = process.env.REACT_APP_API_URL!;
+  console.log(baseUri);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Hello from react from CDK (almost there)
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+
     </div>
   );
 }
